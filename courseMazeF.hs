@@ -49,9 +49,11 @@ isSameDirection dir curdir  = if (abs(magnitude) == 2) then True
 
 findPath::[String] -> (Int, Int) -> (Int, Int) -> IO ()
 findPath maze pos dir = if ((pos == (0, 0)) && (((maze !! y) !! x) /= ' ')) then print("No way out")
-                        else if (x == (length(maze !! y)-1)) then do print(pos)
-                        else if (y == (length maze - 1)) then do print(pos)
-                        else do if ((isSameDirection dir right) && (checkDirection (changeMaze maze pos) pos right)) then findPath (changeMaze maze pos) (directionStep pos right) right
+                        else if (x == (length(maze !! y)-1)) then do print("Exit "++show(pos))
+                        else if (y == (length maze - 1)) then do print("Exit "++show(pos))
+                        else if (verticalVoid) then print("VoidExit "++show(pos))
+                        else do print(show(pos)++"  "++show(dir))
+                                if ((isSameDirection dir right) && (checkDirection (changeMaze maze pos) pos right)) then findPath (changeMaze maze pos) (directionStep pos right) right
                                 else putStr("")
                                 if ((isSameDirection dir left) && (checkDirection (changeMaze maze pos) pos left)) then findPath (changeMaze maze pos) (directionStep pos left) left
                                 else putStr("")
@@ -65,6 +67,8 @@ findPath maze pos dir = if ((pos == (0, 0)) && (((maze !! y) !! x) /= ' ')) then
                                 checkHorizontal = maze !! y !! fst(directionStep pos dir)
                                 checkVertical = maze !! snd(directionStep pos dir) !! x
 
+                                verticalVoid = ((length(maze !! (y+1)) < x) || ((y > 0) && (length(maze !! (y-1)) < x)))
+                              
                                 right = (1, 0)
                                 left  = (-1, 0)
                                 up    = (0, -1)
