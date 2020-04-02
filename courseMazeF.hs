@@ -13,6 +13,12 @@ changeMaze maze pos = prevPartOfMaze ++ current ++ nextPartOfMaze
           current = [changeLine (maze !! (line)) (fst pos)]
           nextPartOfMaze = [maze !! i | i<-[(line + 1)..(length(maze) - 1)]]
 
+saveMaze:: [String] -> (Int, Int) -> IO ()
+saveMaze maze pos = writeFile "maze.txt" (unlines(changeMaze maze pos))
+
+reloadMaze = do maze <- readFile "maze.txt"
+                lines(maze)
+
 directionStep::(Int, Int) -> (Int, Int) -> (Int, Int)
 directionStep pos dir = (x+dx, y+dy)
     where x = fst pos
@@ -53,19 +59,22 @@ findPath maze pos dir = if ((pos == (0, 0)) && (((maze !! y) !! x) /= ' ')) then
                         else if (y == (length maze - 1)) then do print("Exit "++show(pos))
                         else if (verticalVoid) then print("VoidExit "++show(pos))
                         else do print(show(pos)++"  "++show(dir))
-                                if ((isSameDirection dir right) && (checkDirection (changeMaze maze pos) pos right)) then findPath (changeMaze maze pos) (directionStep pos right) right
+                                saveMaze maze pos
+                                if ((isSameDirection dir right) && (checkDirection newMaze pos right)) then findPath newMaze (directionStep pos right) right
                                 else putStr("")
-                                if ((isSameDirection dir left) && (checkDirection (changeMaze maze pos) pos left)) then findPath (changeMaze maze pos) (directionStep pos left) left
+                                if ((isSameDirection dir left) && (checkDirection newMaze pos left)) then findPath newMaze (directionStep pos left) left
                                 else putStr("")
-                                if ((isSameDirection dir up) && (checkDirection (changeMaze maze pos) pos up)) then findPath (changeMaze maze pos) (directionStep pos left) up
+                                if ((isSameDirection dir up) && (checkDirection newMaze pos up)) then findPath newMaze (directionStep pos left) up
                                 else putStr("")
-                                if ((isSameDirection dir down) && (checkDirection (changeMaze maze pos) pos down)) then findPath (changeMaze maze pos) (directionStep pos down) down
+                                if ((isSameDirection dir down) && (checkDirection newMaze pos down)) then findPath newMaze (directionStep pos down) down
                                 else putStr("")
                           where x = fst pos
                                 y = snd pos
                                 
-                                checkHorizontal = maze !! y !! fst(directionStep pos dir)
-                                checkVertical = maze !! snd(directionStep pos dir) !! x
+                                newMaze = reloadMaze
+
+                                checkHorizontal = newMaze !! y !! fst(directionStep pos dir)
+                                checkVertical = newMaze !! snd(directionStep pos dir) !! x
 
                                 verticalVoid = ((length(maze !! (y+1)) < x) || ((y > 0) && (length(maze !! (y-1)) < x)))
                               
@@ -73,9 +82,10 @@ findPath maze pos dir = if ((pos == (0, 0)) && (((maze !! y) !! x) /= ' ')) then
                                 left  = (-1, 0)
                                 up    = (0, -1)
                                 down  = (0, 1)
-                                
+
                                 directions = [right, left, up, down]
                                 
 main = do fileName <- getLine
           maze <- readFile fileName
+          writeFile "maze.txt" maze
           findPath (lines(maze)) (0, 0) (1, 0)
